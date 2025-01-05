@@ -5,35 +5,45 @@
 > [dejavuln-autoroot](https://github.com/throwaway96/dejavuln-autoroot) with
 > limited testing. Expect it to be rough around the edges.
 
-This is a tool to root LG TVs with webOS 3.5+ and automatically install
-[Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel).
-It uses a vulnerability in `faultmanager`
+This is a tool to root and automatically install
+[Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel) on
+LG TVs with webOS 4.0+. It uses a vulnerability in `faultmanager`
 [discovered by buglloc](https://ut.buglloc.com/webos-jailbreak/).
 
-I'm not sure which webOS versions are vulnerable. I have personally tested it
-on webOS 4.5, 6, and 7. I don't expect it to work on versions older than 3.5,
-as `faultmanager` is not present.
-
-<!--
-TODO: add back once this vulnerability is supported
+I believe this vulnerability is present in webOS 4.0 and newer.  I have
+personally tested it on webOS 4.5, 6, 7, 8, and 9.
+As far as I know, no patched firmware exists as of 2025-01-05.
+I don't expect this to work on webOS versions older than 3.5, as the vulnerable
+service is not present. It may not work on webOS 3.5, at least in its current
+form. (However, try
+[dejavuln-autoroot](https://github.com/throwaway96/dejavuln-autoroot) instead,
+as DejaVuln has not been patched on webOS 3.5.)
 
 > [!NOTE]
 > Use [CanI.RootMy.TV](https://cani.rootmy.tv/) to determine whether your
 > firmware is vulnerable.
--->
 
 ## Instructions
 
 1. Set up
    [Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app).
 2. Connect to the TV with an SSH client. (If you need help, see the
-   [crashd guide](https://gist.github.com/throwaway96/e811b0f7cc2a705a5a476a8dfa45e09f).)
+   [crashd guide](https://gist.github.com/throwaway96/e811b0f7cc2a705a5a476a8dfa45e09f#alternative-clients).
+   [Dev Manager](https://github.com/webosbrew/dev-manager-desktop) should
+   also work, but you won't be able to terminate the script after it's done.)
 3. Download `autoroot.sh` to any writable directory (e.g., `/tmp`).
 4. Run `autoroot.sh` (e.g., `sh /tmp/autoroot.sh`).
 5. After the `Rooting complete` message, hit control + C to exit.
 6. **Before rebooting**, uninstall the LG Developer Mode app.
 
 **Do not** install the LG Developer Mode app while the TV is rooted!
+
+## Example
+
+```sh
+curl -L -o /tmp/autoroot.sh -- 'https://raw.githubusercontent.com/throwaway96/faultmanager-autoroot/refs/heads/main/autoroot.sh'
+sh /tmp/autoroot.sh
+```
 
 ## Settings
 
@@ -55,6 +65,9 @@ restarting `appinstalld` does not reliably make it detect the existence of
 
 If the toast and/or log says "Rooting complete" but you don't see Homebrew
 Channel, reboot the TV. Make sure Quick Start+ is disabled.
+
+If you get an error installing the IPK (e.g., `errorCode` -5), make sure your
+TV's date is set to something reasonably accurate.
 
 ## Support
 
