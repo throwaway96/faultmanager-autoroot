@@ -1,0 +1,11 @@
+* text=auto
+
+*.sh text eol=lf
+*.ipk binary
+
+Makefile text eol=lf
+*.md text
+/COPYING text
+/.gitignore text
+/.gitattributes text
+/.github/FUNDING.yml text
