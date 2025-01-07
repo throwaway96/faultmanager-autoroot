@@ -3,7 +3,7 @@
 # faultmanager-autoroot
 # by throwaway96
 # https://github.com/throwaway96/faultmanager-autoroot
-# Copyright 2025. Licensed under AGPL v3 or later. No warranties.
+# Copyright 2024-2025. Licensed under AGPL v3 or later. No warranties.
 
 # Thanks to:
 # - buglloc (Andrew Krasichkov) for discovering the vulnerability
@@ -20,7 +20,12 @@ SCRIPT_NAME='faultmanager-autoroot'
 PAYLOAD_LOGNAME='payload_log'
 PAYLOAD_IPKNAME='hbchannel.ipk'
 
-srcapp='com.webos.service.secondscreen.gateway'
+is_root() {
+    test "$(id -u)" -eq 0
+}
+
+# AppID for toasts/alerts   
+SRC_APPID='com.webos.service.secondscreen.gateway'
 
 toast() {
     [ -n "${logfile}" ] && debug "toasting: '${1}'"
@@ -28,8 +33,13 @@ toast() {
     title="${SCRIPT_NAME}"
     escape1="${1//\\/\\\\}"
     escape="${escape1//\"/\\\"}"
-    payload="$(printf '{"sourceId":"%s","message":"<h3>%s</h3>%s"}' "${srcapp}" "${title}" "${escape}")"
-    luna-send-pub -w 1000 -n 1 'luna://com.webos.notification/createToast' "${payload}" >/dev/null
+    payload="$(printf '{"sourceId":"%s","message":"<h3>%s</h3>%s"}' "${SRC_APPID}" "${title}" "${escape}")"
+
+    if is_root; then
+        luna-send -w 1000 -n 1 -a "${SRC_APPID}" 'luna://com.webos.notification/createToast' "${payload}" >/dev/null
+    else
+        luna-send-pub -w 1000 -n 1 -q 'sdkVersion' -f 'luna://com.webos.service.tv.systemproperty/getSystemInfo' '{"keys":["sdkVersion"]}' | sed -n -e 's/^\s*"sdkVersion":\s*"\([0-9.]\+\)"\s*$/\1/p'
+    fi
 }
 
 debug() {
@@ -61,11 +71,8 @@ get_sdkversion() {
 }
 
 get_devmode_app_state() {
+    # root required
     luna-send -w 5000 -n 1 -q 'returnValue' -f 'luna://com.webos.applicationManager/getAppInfo' '{"id":"com.palmdts.devmode"}' | sed -n -e 's/^\s*"returnValue":\s*\(true\|false\)\s*,\?\s*$/\1/p'
-}
-
-is_root() {
-    test "$(id -u)" -eq 0
 }
 
 create_lockfile() {
@@ -74,7 +81,7 @@ create_lockfile() {
 
     flock -x -n -- 200 || { echo '[!] Another instance of this script is currently running'; exit 2; }
 
-    trap -- "rm -f -- '${lockfile}'" EXIT    
+    trap -- "rm -f -- '${lockfile}'" EXIT
 }
 
 check_sd_verify() {
@@ -132,7 +139,7 @@ verify_sd() {
 
     verify="$(openssl dgst -sha512 -verify "${sd_key}" -signature "${sd_sig}" "${sd_script}")"
 
-    case "${verify}" in 
+    case "${verify}" in
     'Verified OK')
         debug 'start-devmode.sh verification succeeded'
         return 0
@@ -148,10 +155,23 @@ verify_sd() {
     esac
 }
 
-gen_random4() {
-    # Older BusyBox mktemp will prefix bare XXXXXX with "file"
-    randstr="$(mktemp -u -- '_XXXXXX')"
-    echo "${randstr:1:4}"
+enable_devmode() {
+    if [ -d '/var/luna/preferences/devmode_enabled' ]; then
+        log 'devmode_enabled is already a directory; is your TV already rooted?'
+    else
+        if [ -e '/var/luna/preferences/devmode_enabled' ]; then
+            log 'devmode_enabled exists; make sure the LG Dev Mode app is not installed!'
+
+            rm -f -- '/var/luna/preferences/devmode_enabled'
+        else
+            debug 'devmode_enabled does not exist'
+        fi
+
+        if ! mkdir -- '/var/luna/preferences/devmode_enabled'; then
+            error 'Failed to create devmode_enabled directory'
+            exit 1
+        fi
+    fi
 }
 
 restart_appinstalld() {
@@ -164,6 +184,11 @@ restart_appinstalld() {
 
 install_ipk() {
     ipkpath="${1}"
+
+    if  [ ! -f "${ipkpath}" ]; then
+        error 'IPK not found during installation'
+        exit 1s
+    fi
 
     instpayload="$(printf '{"id":"com.ares.defaultName","ipkUrl":"%s","subscribe":true}' "${ipkpath}")"
 
@@ -208,25 +233,6 @@ install_ipk() {
     return 0
 }
 
-enable_devmode() {
-    if [ -d '/var/luna/preferences/devmode_enabled' ]; then
-        log 'devmode_enabled is already a directory; is your TV already rooted?'
-    else
-        if [ -e '/var/luna/preferences/devmode_enabled' ]; then
-            log 'devmode_enabled exists; make sure the LG Dev Mode app is not installed!'
-
-            rm -f -- '/var/luna/preferences/devmode_enabled'
-        else
-            debug 'devmode_enabled does not exist'
-        fi
-
-        if ! mkdir -- '/var/luna/preferences/devmode_enabled'; then
-            error 'Failed to create devmode_enabled directory'
-            exit 1
-        fi
-    fi
-}
-
 elevate_hbchannel() {
     if ! /media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/elevate-service >"${tempdir}/elevate.log"; then
         error 'Elevation failed'
@@ -234,33 +240,8 @@ elevate_hbchannel() {
     fi
 }
 
-payload() {
-    logfile="${tempdir}/${PAYLOAD_LOGNAME}"
-
-    # Only allow the script to run once per 
-    payload_oncefile="${tempdir}/payload.once"
-    [ -e "${payload_oncefile}" ] && { debug 'Script already executed'; exit 3; }
-    touch -- "${payload_oncefile}" 
-
-    [ -n "${DEBUG}" ] && toast 'Script is running!'
-
-    [ -n "${TELNET}" ] && { telnetd -l sh || echo "[!] Failed to start telnetd (${?})"; }
-
-    log "script path: ${0}"
-
-    if ! is_root; then
-        log "warning: not running as root!"
-    fi
-
-    ipk="${tempdir}/${PAYLOAD_IPKNAME}"
-
-    if [ ! -e "${ipk}" ]; then
-        error "IPK does not exist ('${ipk}')"
-    fi
-
-    log "date: $(date -u -- '+%Y-%m-%d %H:%M:%S UTC')"
-    log "id: $(id)"
-
+# Set up persistent root access
+perform_root() {
     enable_devmode
 
     restart_appinstalld
@@ -280,7 +261,7 @@ payload() {
         fi
 
         sleep_secs=$((sleep_secs_base * (retries - retry + 1)))
-        
+
         restart_appinstalld
 
         log "Sleeping for ${sleep_secs} seconds before trying again (${retry} tries remaining)"
@@ -343,11 +324,17 @@ payload() {
         ;;
     esac
 
-    payload="$(printf '{"sourceId":"%s","message":"<h3>%s</h3>Rooting complete. You may need to reboot for Homebrew Channel to appear.<br>%s","buttons":[%s]}' "${srcapp}" "${SCRIPT_NAME}" "${message}" "${buttons}")"
+    payload="$(printf '{"sourceId":"%s","message":"<h3>%s</h3>Rooting complete. You may need to reboot for Homebrew Channel to appear.<br>%s","buttons":[%s]}' "${SRC_APPID}" "${SCRIPT_NAME}" "${message}" "${buttons}")"
 
-    alert_response="$(luna-send -w 2000 -a "${srcapp}" -n 1 'luna://com.webos.notification/createAlert' "${payload}")"
+    alert_response="$(luna-send -w 2000 -a "${SRC_APPID}" -n 1 'luna://com.webos.notification/createAlert' "${payload}")"
 
     debug "/createAlert response: '${alert_response}'"
+}
+
+gen_random4() {
+    # Older BusyBox mktemp will prefix bare XXXXXX with "file"
+    randstr="$(mktemp -u -- '_XXXXXX')"
+    echo "${randstr:1:4}"
 }
 
 find_python() {
@@ -362,6 +349,37 @@ find_python() {
         error "Python not found"
         exit 1
     fi
+}
+
+# Runs as root
+payload() {
+    logfile="${tempdir}/${PAYLOAD_LOGNAME}"
+
+    # Only allow the script to run once per tempdir
+    payload_oncefile="${tempdir}/payload.once"
+    [ -e "${payload_oncefile}" ] && { debug 'Script already executed'; exit 3; }
+    touch -- "${payload_oncefile}"
+
+    [ -n "${DEBUG}" ] && toast 'Script is running!'
+
+    [ -n "${TELNET}" ] && { telnetd -l sh || echo "[!] Failed to start telnetd (${?})"; }
+
+    log "script path: ${0}"
+
+    if ! is_root; then
+        log "warning: not running as root!"
+    fi
+
+    ipk="${tempdir}/${PAYLOAD_IPKNAME}"
+
+    if [ ! -e "${ipk}" ]; then
+        error "IPK does not exist ('${ipk}')"
+    fi
+
+    log "date: $(date -u -- '+%Y-%m-%d %H:%M:%S UTC')"
+    log "id: $(id)"
+
+    perform_root
 }
 
 umask 022
@@ -429,7 +447,9 @@ log "id: $(id)"
 
 trap -- "cp -f -- '${logfile}' '${SCRIPT_DIR}/autoroot.log'" EXIT
 
-log "webOS version: $(get_sdkversion)"
+webos_version="$(get_sdkversion)"
+
+log "webOS version: ${webos_version}"
 
 payload_ipk="${tempdir}/${PAYLOAD_IPKNAME}"
 
