@@ -52,6 +52,9 @@ The `autoroot.sh` script accepts certain command line options:
 * `--debug` or `-d` - Enables additional logging.
 * `--telnet` or `-t` - Makes a root shell available via telnet on port 23.
   Note that this won't work on webOS 9 (24), which does not have `telnetd`!
+* `--leave-script` - Don't rename `start-devmode.sh` with invalid signature.
+  You almost certainly won't need this, but it's documented here for the sake
+  of completeness.
 
 If there is a file named `hbchannel.ipk` in the same directory as
 `autoroot.sh`, it will be installed. Otherwise, the latest Homebrew Channel
