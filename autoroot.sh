@@ -362,7 +362,21 @@ find_python() {
 
 # Runs as root
 payload() {
-    logfile="${tempdir}/${PAYLOAD_LOGNAME}"
+    if [ -n "${tempdir}" ]; then
+        logfile="${tempdir}/${PAYLOAD_LOGNAME}"
+    else
+        tempdir="/tmp/autoroot.${$}"
+        if ! mkdir -- "${tempdir}"; then
+            echo "[x] PID-based fallback temporary directory ${tempdir} already exists"
+            tempdir='/tmp/autoroot.temp'
+            rm -rf -- "${tempdir}"
+            mkdir -- "${tempdir}"
+        fi
+
+        logfile="${tempdir}/error_log"
+
+        error "Payload didn't receive tempdir; see ${logfile}"
+    fi
 
     # Only allow the script to run once per tempdir
     payload_oncefile="${tempdir}/payload.once"
