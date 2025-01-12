@@ -470,7 +470,7 @@ logfile="${tempdir}/log"
 touch -- "${logfile}"
 
 if [ -n "${DEBUG}" ]; then
-    loglink='/tmp/autoroot.log'
+    loglink='/tmp/autoroot-link.log'
     rm -rf -- "${loglink}"
     ln -s -- "${logfile}" "${loglink}"
 fi
@@ -525,6 +525,8 @@ debug "payload_script: '${payload_script}'"
 payload_logfile="${tempdir}/${PAYLOAD_LOGNAME}"
 touch -- "${payload_logfile}"
 chmod '0622' -- "${payload_logfile}"
+
+add_exit_trap "cp -f -- '${payload_logfile}' '${SCRIPT_DIR}/autoroot-payload.log'"
 
 temp_script_copy="${tempdir}/autoroot.sh"
 rm -f -- "${temp_script_copy}"
