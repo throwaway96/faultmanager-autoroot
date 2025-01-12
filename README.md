@@ -1,10 +1,5 @@
 # faultmanager-autoroot
 
-> [!IMPORTANT]
-> This was quickly adapted from
-> [dejavuln-autoroot](https://github.com/throwaway96/dejavuln-autoroot) with
-> limited testing. Expect it to be rough around the edges.
-
 This is a tool to root and automatically install
 [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel) on
 LG TVs with webOS 4.0+. It uses a vulnerability in `faultmanager`
@@ -30,7 +25,7 @@ as DejaVuln has not been patched on webOS 3.5.)
 2. Connect to the TV with an SSH client. (If you need help, see the
    [crashd guide](https://gist.github.com/throwaway96/e811b0f7cc2a705a5a476a8dfa45e09f#alternative-clients).
    [Dev Manager](https://github.com/webosbrew/dev-manager-desktop) should
-   also work, but you won't be able to terminate the script after it's done.)
+   also work.)
 3. Download `autoroot.sh` to any writable directory (e.g., `/tmp`).
 4. Run `autoroot.sh` (e.g., `sh /tmp/autoroot.sh`).
 5. Wait for the `Payload complete` message; the script should exit soon after.
@@ -41,7 +36,7 @@ as DejaVuln has not been patched on webOS 3.5.)
 ## Example
 
 ```sh
-curl -L -o /tmp/autoroot.sh -- 'https://raw.githubusercontent.com/throwaway96/faultmanager-autoroot/refs/heads/main/autoroot.sh'
+curl -L -o /tmp/autoroot.sh -- 'https://raw.githubusercontent.com/throwaway96/faultmanager-autoroot/refs/heads/main/autoroot.sh' &&
 sh /tmp/autoroot.sh
 ```
 
@@ -62,6 +57,8 @@ IPK will be downloaded and installed.
 
 ## Troubleshooting
 
+Check the log files. They are named `autoroot.log` and `autoroot-payload.log`.
+
 On webOS 8/9 (webOS 23/24), you may have to try multiple times; it seems that
 restarting `appinstalld` does not reliably make it detect the existence of
 `devmode_enabled`. May also apply to webOS 7.
@@ -78,12 +75,8 @@ You can find more information at [webosbrew.org](https://www.webosbrew.org/).
 
 If you need help rooting your TV, try the
 [OpenLGTV Discord](https://discord.gg/hXMHAgJC5R). Before you ask a question,
-check the FAQ (#faq) to see if it is answered there!
-<!--
-TODO: add back when logging is done
-
-Attach your `autoroot.log` when asking for help.
--->
+check the FAQ (#faq) to see if it is answered there! Attach your `autoroot.log`
+and `autoroot-payload.log` (if present) when asking for help.
 
 ## Credits
 
