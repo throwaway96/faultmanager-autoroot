@@ -33,7 +33,7 @@ as DejaVuln has not been patched on webOS 3.5.)
    also work, but you won't be able to terminate the script after it's done.)
 3. Download `autoroot.sh` to any writable directory (e.g., `/tmp`).
 4. Run `autoroot.sh` (e.g., `sh /tmp/autoroot.sh`).
-5. After the `Rooting complete` message, hit control + C to exit.
+5. Wait for the `Payload complete` message; the script should exit soon after.
 6. **Before rebooting**, uninstall the LG Developer Mode app.
 
 **Do not** install the LG Developer Mode app while the TV is rooted!

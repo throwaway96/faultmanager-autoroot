@@ -416,6 +416,12 @@ payload() {
     log "id: $(id)"
 
     perform_root
+
+    if [ -n "${parent_pid}" ]; then
+        kill -USR1 "${parent_pid}"
+    else
+        error 'parent_pid not set'
+    fi
 }
 
 umask 022
@@ -434,7 +440,8 @@ while [ "${#}" -gt 0 ]; do
         '--payload')
             PAYLOAD='arg'
             tempdir="${2}"
-            shift 1
+            parent_pid="${3}"
+            shift 2
         ;;
         *)
             echo "Unknown option '${1}'"
@@ -540,7 +547,7 @@ payload_args=''
 
 cat >"${payload_script}" <<__EOF__
 #!/bin/sh
-sh "${temp_script_copy}" --payload "${tempdir}" ${payload_args}
+sh "${temp_script_copy}" --payload "${tempdir}" "${$}" ${payload_args}
 __EOF__
 
 chmod '0755' -- "${payload_script}"
@@ -549,9 +556,51 @@ chmod '0755' -- "${payload_script}"
 crash="${tempdir}/\`${payload_uninterp}\`"
 ln -s -- "$(find_python)" "${crash}"
 
+killed_tail=''
+
+# Kill the background child process if it's still running
+kill_tail() {
+    if [ -n "${killed_tail}" ]; then
+        # This must be the EXIT handler after the SIGUSR1 handler already ran
+        return
+    fi
+
+    if jobs %% >/dev/null 2>&1; then
+        debug 'Killing child process'
+        kill %%
+        killed_tail='yes'
+    else
+        debug 'Child process already dead'
+    fi
+}
+
+sigusr1_handler() {
+    # Wait for tail to finish reading log
+    sleep 2
+
+    kill_tail
+
+    log 'Payload complete'
+
+    exit 0
+}
+
+trap 'sigusr1_handler' 'USR1'
+
+# Kill child process regardless of exit type (although not SIGINT...)
+add_exit_trap 'kill_tail'
+
 # Crash with one of the signals handled by libSegFault
 "${crash}" -c 'import os;os.kill(os.getpid(),11)' || true
 
 # Display output from payload
 echo "Payload log:"
-tail -f -- "${payload_logfile}"
+tail -f -- "${payload_logfile}" &
+
+# Wait for SIGUSR1 from payload
+wait_ret=''
+wait %% || wait_ret="${?}"
+
+# If we received SIGUSR1, the handler will have prevented us from getting here
+error "Error reading payload log (${wait_ret:-not set})"
+exit 1
