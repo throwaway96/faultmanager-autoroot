@@ -5,18 +5,35 @@ This is a tool to root and automatically install
 LG TVs with webOS 4.0+. It uses a vulnerability in `faultmanager`
 [discovered by buglloc](https://ut.buglloc.com/webos-jailbreak/).
 
-I believe this vulnerability is present in webOS 4.0 and newer.  I have
-personally tested it on webOS 4.5, 6, 7, 8, and 9.
-As far as I know, no patched firmware exists as of 2025-01-05.
-I don't expect this to work on webOS versions older than 3.5, as the vulnerable
-service is not present. It may not work on webOS 3.5, at least in its current
-form. (However, try
+This vulnerability is present in webOS 4.0 through 9. The vulnerable service
+was introduced in webOS 3.5, but this exploit will not work on that
+version. (I have not checked whether the underlying vulnerability
+is present. You can use
 [dejavuln-autoroot](https://github.com/throwaway96/dejavuln-autoroot) instead,
 as DejaVuln has not been patched on webOS 3.5.)
 
 > [!NOTE]
 > Use [CanI.RootMy.TV](https://cani.rootmy.tv/) to determine whether your
 > firmware is vulnerable.
+
+**Please do not create GitHub issues asking whether a specific version is
+rootable or reporting that you successfully rooted some version.** The latest
+information is available at [CanI.RootMy.TV](https://cani.rootmy.tv/).
+
+## Patch status
+
+> [!WARNING]
+> LG has started rolling out patched firmware. Do not update your
+> firmware if you want to be able to root your TV.
+
+As of 2025-03-08, I am only aware of patched *prerelease* firmware.
+
+To avoid prerelease firmware, don't mess with the "NSU Mode" setting in
+the Instart menu (which is not recommended anyway).
+
+I expect to see patched firmware for most webOS 5+ OTAIDs start being released
+relatively soon. However, webOS 4.0 probably won't be patched, and I don't
+know whether webOS 4.5 will be.
 
 ## Instructions
 
