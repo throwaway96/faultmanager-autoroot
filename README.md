@@ -26,14 +26,15 @@ information is available at [CanI.RootMy.TV](https://cani.rootmy.tv/).
 > LG has started rolling out patched firmware. Do not update your
 > firmware if you want to be able to root your TV.
 
-As of 2025-03-08, I am only aware of patched *prerelease* firmware.
+As of 2025-04-06, patched firmware has been released for most webOS 9 OTAIDs.
+There is patched prerelease firmware for many other OTAIDs.
 
 To avoid prerelease firmware, don't mess with the "NSU Mode" setting in
 the Instart menu (which is not recommended anyway).
 
-I expect to see patched firmware for most webOS 5+ OTAIDs start being released
-relatively soon. However, webOS 4.0 probably won't be patched, and I don't
-know whether webOS 4.5 will be.
+I expect to see patched firmware for most webOS 5+ OTAIDs.
+However, webOS 4.0 probably won't be patched (although it has seen some
+attention from LG recently), and I don't know whether webOS 4.5 will be.
 
 ## Instructions
 
