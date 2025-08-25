@@ -5,7 +5,7 @@ This is a tool to root and automatically install
 LG TVs with webOS 4.0+. It uses a vulnerability in `faultmanager`
 [discovered by buglloc](https://ut.buglloc.com/webos-jailbreak/).
 
-This vulnerability is present in webOS 4.0 through 9. The vulnerable service
+This vulnerability is present in webOS 4.0 through 10.0. The vulnerable service
 was introduced in webOS 3.5, but this exploit will not work on that
 version. (I have not checked whether the underlying vulnerability
 is present. You can use
@@ -23,18 +23,20 @@ information is available at [CanI.RootMy.TV](https://cani.rootmy.tv/).
 ## Patch status
 
 > [!WARNING]
-> LG has started rolling out patched firmware. Do not update your
-> firmware if you want to be able to root your TV.
+> The latest webOS 5+ firmware is almost all patched.
 
-As of 2025-04-06, patched firmware has been released for most webOS 9 OTAIDs.
-There is patched prerelease firmware for many other OTAIDs.
+As of 2025-08-24, the latest firmware for essentially all LG models running
+webOS 5, 6, 7, and 9 is patched. The only exceptions I'm aware of are some
+smart monitor and WEE products. For 2025 models, the only vulnerable firmware
+I've seen came preinstalled from the factory (webOS 10.0); any updates
+(webOS 10.1+) are patched.
+
+webOS 4.0 probably won't be patched (although it has seen some
+attention from LG recently), and I haven't seen any patched webOS 4.5
+firmware yet.
 
 To avoid prerelease firmware, don't mess with the "NSU Mode" setting in
 the Instart menu (which is not recommended anyway).
-
-I expect to see patched firmware for most webOS 5+ OTAIDs.
-However, webOS 4.0 probably won't be patched (although it has seen some
-attention from LG recently), and I don't know whether webOS 4.5 will be.
 
 ## Instructions
 
@@ -75,9 +77,15 @@ IPK will be downloaded and installed.
 
 ## Troubleshooting
 
+Ensure your firmware is vulnerable by checking
+[CanI.RootMy.TV](https://cani.rootmy.tv/).
+
+The exploit involves intentionally triggering a segmentation fault, so don't
+be surprised when you see one.
+
 Check the log files. They are named `autoroot.log` and `autoroot-payload.log`.
 
-On webOS 8/9 (webOS 23/24), you may have to try multiple times; it seems that
+On webOS 8+ (webOS 23+), you may have to try multiple times; it seems that
 restarting `appinstalld` does not reliably make it detect the existence of
 `devmode_enabled`. May also apply to webOS 7.
 
@@ -90,6 +98,9 @@ TV's date is set to something reasonably accurate.
 ## Support
 
 You can find more information at [webosbrew.org](https://www.webosbrew.org/).
+
+**Please check [CanI.RootMy.TV](https://cani.rootmy.tv/) before asking for
+help.**
 
 If you need help rooting your TV, try the
 [OpenLGTV Discord](https://discord.gg/hXMHAgJC5R). Before you ask a question,
