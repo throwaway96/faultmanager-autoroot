@@ -590,6 +590,9 @@ trap 'sigusr1_handler' 'USR1'
 # Kill child process regardless of exit type (although not SIGINT...)
 add_exit_trap 'kill_tail'
 
+# Let people know to expect a segfault
+echo "Triggering segmentation fault..."
+
 # Crash with one of the signals handled by libSegFault
 "${crash}" -c 'import os;os.kill(os.getpid(),11)' || true
 
